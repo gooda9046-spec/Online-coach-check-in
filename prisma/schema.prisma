@@ -1,0 +1,34 @@
+// Backing store for the interactive product demo at /product-demo.
+// Deliberately simple for the first real coach+client beta: JSON columns
+// for the nested, coach-authored shapes (program days/exercises, weight
+// log, message thread) rather than a fully relational model.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Program {
+  id        String   @id
+  name      String
+  days      Json
+  createdAt DateTime @default(now())
+}
+
+model Client {
+  id           String   @id
+  name         String
+  initials     String
+  programId    String?
+  adherence    Int
+  status       String
+  nextCheckIn  String
+  weightUnit   String
+  weightLog    Json
+  messages     Json
+  createdAt    DateTime @default(now())
+}

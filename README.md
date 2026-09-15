@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Forge Marketing Site
 
-## Getting Started
+Next.js marketing site for Forge, including an interactive product demo at
+[`/product-demo`](app/product-demo/page.tsx) — a real (if minimal) coach +
+client experience backed by Postgres, meant for testing the core loop with
+an actual coach and an actual client.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
+cp .env.example .env   # point DATABASE_URL at a local Postgres
+npx prisma migrate dev
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The demo's `REPO_DRIVER`-equivalent here is just "does `DATABASE_URL` point
+somewhere real" — there's no in-memory fallback for this app, since the
+whole point of `/product-demo`'s backend is durable, shared state.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Sharing `/product-demo` with a real coach + client (beta)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This is a **single shared instance** — no login, no multi-tenant isolation.
+That's intentional for a first 1:1 test: whoever opens the link sees the
+same data, updates in real time (polled every 4s), on whatever device they're
+on. Don't share the deployed link beyond the people you're actually testing
+with — anyone with it can act as any client or the coach.
 
-## Learn More
+1. **Database**: create a free Postgres instance — [Neon](https://neon.tech)
+   or [Supabase](https://supabase.com) both work. Copy the connection
+   string.
+2. **Deploy**: push this repo to GitHub, then import it on
+   [Vercel](https://vercel.com/new). Add an environment variable
+   `DATABASE_URL` with the connection string from step 1.
+3. **Migrate**: before (or right after) the first deploy, run migrations
+   against that database from your machine:
+   ```bash
+   DATABASE_URL="<your connection string>" npx prisma migrate deploy
+   ```
+4. **Share**: send your coach `https://<your-app>.vercel.app/product-demo`.
+   They can toggle "Coach view" / "Client view" themselves, or you can walk
+   them through it — the point of the client view is that their actual
+   client can open the same link on their own phone and it stays in sync.
 
-To learn more about Next.js, take a look at the following resources:
+## What's real vs. not
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Real**: program assignment, weight check-ins, and coach↔client
+  messages — all persisted in Postgres, visible to every viewer of the link.
+- **Not real yet**: authentication (anyone with the link is "in"), payments,
+  and the rest of the marketing site's forms (signup/login/demo-request) —
+  those still show an honest "not wired up" message rather than pretending
+  to work.
