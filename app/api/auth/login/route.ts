@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { createSession, verifyPassword } from "@/lib/auth";
+import { createSession, createTwoFactorChallenge, verifyPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -17,6 +17,11 @@ export async function POST(request: Request) {
 
   if (!user || !valid) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  }
+
+  if (user.twoFactorEnabled) {
+    const { challengeId } = await createTwoFactorChallenge(user.id, user.email);
+    return NextResponse.json({ twoFactorRequired: true, challengeId });
   }
 
   await createSession(user.id);

@@ -17,13 +17,16 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         Role
-  createdAt    DateTime  @default(now())
-  sessions     Session[]
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  role             Role
+  twoFactorEnabled Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  sessions         Session[]
+  resetTokens      PasswordResetToken[]
+  twoFactorCodes   TwoFactorCode[]
 
   // Present only for role = coach
   coachedClients Client[]  @relation("CoachToClients")
@@ -31,6 +34,32 @@ model User {
 
   // Present only for role = client
   clientProfile Client? @relation("UserToClient")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TwoFactorCode {
+  id        String    @id @default(cuid())
+  code      String
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {

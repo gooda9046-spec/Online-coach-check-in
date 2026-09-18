@@ -2,7 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Info, Loader2, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Info, Loader2, LogOut, Settings } from "lucide-react";
 
 import { DemoSidebar } from "./DemoSidebar";
 import { ClientAppView } from "./ClientAppView";
@@ -308,13 +309,21 @@ function TopBar({
         <Info className="h-3.5 w-3.5 shrink-0" />
         Signed in as {name} ({role}) — this is your real account and real data.
       </span>
-      <button
-        type="button"
-        onClick={onLogout}
-        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted hover:border-accent/40 hover:text-foreground"
-      >
-        <LogOut className="h-3.5 w-3.5" /> Log out
-      </button>
+      <div className="flex items-center gap-2">
+        <Link
+          href="/account"
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted hover:border-accent/40 hover:text-foreground"
+        >
+          <Settings className="h-3.5 w-3.5" /> Account
+        </Link>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted hover:border-accent/40 hover:text-foreground"
+        >
+          <LogOut className="h-3.5 w-3.5" /> Log out
+        </button>
+      </div>
     </div>
   );
 }
