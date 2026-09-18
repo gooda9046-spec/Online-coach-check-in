@@ -7,9 +7,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
-export function SignupForm() {
+export function JoinForm({ code }: { code: string }) {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,17 +19,17 @@ export function SignupForm() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/auth/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ code, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Sign up failed.");
+      if (!res.ok) throw new Error(data.error ?? "Couldn't create your account.");
       router.push("/product-demo");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign up failed.");
+      setError(err instanceof Error ? err.message : "Couldn't create your account.");
       setLoading(false);
     }
   }
@@ -43,19 +42,7 @@ export function SignupForm() {
         </p>
       )}
       <div>
-        <Label htmlFor="name">Full name</Label>
-        <Input
-          id="name"
-          name="name"
-          type="text"
-          placeholder="Alex Rivera"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="email">Work email</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           name="email"
@@ -67,7 +54,7 @@ export function SignupForm() {
         />
       </div>
       <div>
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Choose a password</Label>
         <Input
           id="password"
           name="password"
@@ -81,12 +68,8 @@ export function SignupForm() {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Start Free Trial
+        Create My Account
       </Button>
-      <p className="text-center text-xs text-muted">
-        By continuing, you agree to Forge&apos;s Terms and Privacy Policy. This creates a real
-        account — you&apos;ll sign in with this email and password.
-      </p>
     </form>
   );
 }

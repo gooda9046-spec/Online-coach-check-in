@@ -10,6 +10,7 @@ export function serializeClient(row: ClientRow): Client {
     id: row.id,
     name: row.name,
     initials: row.initials,
+    userId: row.userId,
     programId: row.programId,
     adherence: row.adherence,
     status: row.status as Client["status"],

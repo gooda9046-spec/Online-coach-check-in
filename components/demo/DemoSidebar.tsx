@@ -43,10 +43,6 @@ export function DemoSidebar({
           </button>
         ))}
       </nav>
-      <div className="border-t border-border p-4">
-        <p className="text-xs text-muted">Signed in as</p>
-        <p className="text-sm font-medium text-foreground">Coach Alex</p>
-      </div>
     </aside>
   );
 }

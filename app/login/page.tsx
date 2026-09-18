@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { PageShell } from "@/components/PageShell";
 import { LoginForm } from "@/components/forms/LoginForm";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Log In",
   description: "Log in to your Forge coaching account.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const user = await getCurrentUser();
+  if (user) redirect("/product-demo");
+
   return (
     <PageShell eyebrow="Welcome back" title="Log in to Forge">
       <div className="rounded-2xl border border-border bg-surface p-8">

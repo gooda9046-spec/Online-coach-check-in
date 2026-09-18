@@ -1,42 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
 export function LoginForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-6 text-center">
-        <CheckCircle2 className="h-10 w-10 text-accent-bright" />
-        <p className="text-foreground">
-          This is a concept preview — sign-in isn&apos;t wired up to a real account yet.
-        </p>
-      </div>
-    );
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Log in failed.");
+      router.push("/product-demo");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Log in failed.");
+      setLoading(false);
+    }
   }
 
   return (
-    <form
-      className="space-y-5"
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSubmitted(true);
-      }}
-    >
+    <form className="space-y-5" onSubmit={onSubmit}>
+      {error && (
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          {error}
+        </p>
+      )}
       <div>
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
       </div>
       <div>
         <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" placeholder="••••••••" required />
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
       </div>
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Log In
       </Button>
     </form>

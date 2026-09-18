@@ -2,11 +2,15 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 import { serializeClient } from "@/lib/demoSerialize";
 import type { WeightEntry } from "@/components/demo/types";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
 export async function POST(request: Request, ctx: RouteContext<"/api/demo/clients/[id]/weight">) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+
   const { id } = await ctx.params;
   const body = await request.json().catch(() => null);
   const weight = typeof body?.weight === "number" ? body.weight : NaN;
@@ -16,6 +20,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/demo/client
 
   const existing = await prisma.client.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+
+  const allowed = existing.coachId === user.id || existing.userId === user.id;
+  if (!allowed) return NextResponse.json({ error: "Not your client." }, { status: 403 });
 
   const today = new Date().toISOString().slice(0, 10);
   const currentLog = existing.weightLog as unknown as WeightEntry[];

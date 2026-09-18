@@ -3,26 +3,27 @@ import { ArrowRight } from "lucide-react";
 import type { Client, DemoView, Program } from "../types";
 
 export function DashboardView({
+  coachName,
   clients,
   programs,
   onNavigate,
 }: {
+  coachName: string;
   clients: Client[];
   programs: Program[];
   onNavigate: (view: DemoView) => void;
 }) {
-  const avgAdherence = Math.round(
-    clients.reduce((sum, c) => sum + c.adherence, 0) / clients.length
-  );
+  const joined = clients.filter((c) => c.userId).length;
   const needsAttention = clients.filter((c) => c.status === "Needs check-in");
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Good morning, Coach Alex</h1>
+          <h1 className="text-xl font-semibold text-foreground">Welcome back, {coachName}</h1>
           <p className="mt-1 text-sm text-muted">
-            {clients.length} active clients · {needsAttention.length} need attention
+            {clients.length} {clients.length === 1 ? "client" : "clients"} · {needsAttention.length} need
+            attention
           </p>
         </div>
         <button
@@ -36,12 +37,14 @@ export function DashboardView({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-xs text-muted">Revenue (MTD)</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">$14,280</p>
+          <p className="text-xs text-muted">Clients</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{clients.length}</p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-xs text-muted">Average adherence</p>
-          <p className="mt-1 text-2xl font-bold text-accent-bright">{avgAdherence}%</p>
+          <p className="text-xs text-muted">Joined their account</p>
+          <p className="mt-1 text-2xl font-bold text-accent-bright">
+            {joined}/{clients.length}
+          </p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-4">
           <p className="text-xs text-muted">Programs</p>
@@ -61,7 +64,20 @@ export function DashboardView({
           </button>
         </div>
         <div className="space-y-2">
-          {needsAttention.length === 0 && (
+          {clients.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted">
+              No clients yet —{" "}
+              <button
+                type="button"
+                onClick={() => onNavigate({ name: "clients" })}
+                className="font-medium text-accent-bright hover:underline"
+              >
+                add your first one
+              </button>
+              .
+            </p>
+          )}
+          {clients.length > 0 && needsAttention.length === 0 && (
             <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">
               Nobody needs attention right now — nice work.
             </p>

@@ -1,10 +1,56 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Check, Copy } from "lucide-react";
 
 import type { Client, DemoView, Program } from "../types";
 import { WeightCheckIns } from "../WeightCheckIns";
 import { MessageThread } from "../MessageThread";
+
+function InviteBanner({ clientId, hasJoined }: { clientId: string; hasJoined: boolean }) {
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (hasJoined) return;
+    fetch(`/api/demo/clients/${clientId}/invite`)
+      .then((res) => res.json())
+      .then((data) => setInviteUrl(data.inviteUrl ?? null))
+      .catch(() => setInviteUrl(null));
+  }, [clientId, hasJoined]);
+
+  if (hasJoined || !inviteUrl) return null;
+
+  return (
+    <div className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-4">
+      <p className="text-sm font-semibold text-foreground">Waiting for them to join</p>
+      <p className="mt-1 text-xs text-muted">
+        Send this link so they can create their account and link up with you.
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <input
+          readOnly
+          value={inviteUrl}
+          className="flex-1 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground"
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }}
+          className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-bright"
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function ClientDetailView({
   client,
@@ -42,6 +88,8 @@ export function ClientDetailView({
           <p className="text-sm text-muted">Next check-in: {client.nextCheckIn}</p>
         </div>
       </div>
+
+      <InviteBanner clientId={client.id} hasJoined={Boolean(client.userId)} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">

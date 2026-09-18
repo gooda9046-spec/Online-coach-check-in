@@ -1,7 +1,6 @@
 // Backing store for the interactive product demo at /product-demo.
-// Deliberately simple for the first real coach+client beta: JSON columns
-// for the nested, coach-authored shapes (program days/exercises, weight
-// log, message thread) rather than a fully relational model.
+// Real accounts: a coach signs up directly; a client only ever gets in via
+// an invite link a coach generates, so every Client row always has a home.
 
 generator client {
   provider = "prisma-client"
@@ -12,23 +11,81 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  coach
+  client
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+
+  // Present only for role = coach
+  coachedClients Client[]  @relation("CoachToClients")
+  programs       Program[]
+
+  // Present only for role = client
+  clientProfile Client? @relation("UserToClient")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model Program {
   id        String   @id
   name      String
   days      Json
+  coachId   String
   createdAt DateTime @default(now())
+
+  coach   User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  clients Client[]
+
+  @@index([coachId])
 }
 
 model Client {
-  id           String   @id
-  name         String
-  initials     String
-  programId    String?
-  adherence    Int
-  status       String
-  nextCheckIn  String
-  weightUnit   String
-  weightLog    Json
-  messages     Json
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  initials    String
+  coachId     String
+  userId      String?  @unique
+  programId   String?
+  adherence   Int      @default(0)
+  status      String   @default("New")
+  nextCheckIn String   @default("—")
+  weightUnit  String   @default("lb")
+  weightLog   Json     @default("[]")
+  messages    Json     @default("[]")
+  createdAt   DateTime @default(now())
+
+  coach   User     @relation("CoachToClients", fields: [coachId], references: [id], onDelete: Cascade)
+  user    User?    @relation("UserToClient", fields: [userId], references: [id], onDelete: SetNull)
+  program Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  invite  Invite?
+
+  @@index([coachId])
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  clientId  String    @unique
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }

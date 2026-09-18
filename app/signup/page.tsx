@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { PageShell } from "@/components/PageShell";
 import { SignupForm } from "@/components/forms/SignupForm";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Start Your Free Trial",
@@ -15,6 +17,9 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 export default async function SignupPage(props: PageProps<"/signup">) {
+  const user = await getCurrentUser();
+  if (user) redirect("/product-demo");
+
   const searchParams = await props.searchParams;
   const planParam = typeof searchParams.plan === "string" ? searchParams.plan : undefined;
   const planLabel = planParam ? PLAN_LABELS[planParam] : undefined;

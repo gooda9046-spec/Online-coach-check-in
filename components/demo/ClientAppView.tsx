@@ -18,11 +18,13 @@ const tabs: { key: ClientTab; label: string; icon: typeof Sun }[] = [
 export function ClientAppView({
   client,
   program,
+  coachName,
   onLogWeight,
   onSendMessage,
 }: {
   client: Client;
   program: Program | null;
+  coachName: string;
   onLogWeight: (clientId: string, weight: number) => void;
   onSendMessage: (clientId: string, text: string) => void;
 }) {
@@ -95,7 +97,7 @@ export function ClientAppView({
 
         {tab === "messages" && (
           <div className="flex h-[440px] flex-col">
-            <p className="mb-2 text-lg font-semibold text-foreground">Coach Alex</p>
+            <p className="mb-2 text-lg font-semibold text-foreground">{coachName}</p>
             <div className="flex-1 overflow-hidden rounded-xl border border-border">
               <MessageThread
                 messages={client.messages}
