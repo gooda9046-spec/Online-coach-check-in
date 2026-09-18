@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Copy } from "lucide-react";
 
 import type { Client, DemoView, Program } from "../types";
 import { WeightCheckIns } from "../WeightCheckIns";
+import { ExerciseCharts } from "../ExerciseCharts";
 import { MessageThread } from "../MessageThread";
 
 function InviteBanner({ clientId, hasJoined }: { clientId: string; hasJoined: boolean }) {
@@ -137,6 +138,11 @@ export function ClientDetailView({
           </div>
 
           <WeightCheckIns client={client} onLog={onLogWeight} />
+
+          <div>
+            <p className="mb-3 text-sm font-semibold text-foreground">Exercise progression</p>
+            <ExerciseCharts workoutLogs={client.workoutLogs} weightUnit={client.weightUnit} />
+          </div>
         </div>
 
         <div className="space-y-4">

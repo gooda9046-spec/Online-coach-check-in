@@ -161,6 +161,18 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
     }
   }
 
+  async function logWorkout(clientId: string, exerciseName: string, weight: number, reps: number) {
+    try {
+      const updated = await api<Client>(`/api/demo/clients/${clientId}/workout-log`, {
+        method: "POST",
+        body: JSON.stringify({ exerciseName, weight, reps }),
+      });
+      applyClientUpdate(updated);
+    } catch (err) {
+      console.error("Failed to log workout:", err);
+    }
+  }
+
   async function sendMessage(clientId: string, text: string) {
     const optimisticFrom = currentUser.role;
     const optimistic: Client["messages"][number] = {
@@ -214,6 +226,7 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
             program={state.program}
             coachName={state.coachName}
             onLogWeight={logWeight}
+            onLogWorkout={logWorkout}
             onSendMessage={sendMessage}
           />
         </div>

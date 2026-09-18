@@ -69,6 +69,7 @@ model Client {
   nextCheckIn String   @default("—")
   weightUnit  String   @default("lb")
   weightLog   Json     @default("[]")
+  workoutLogs Json     @default("[]")
   messages    Json     @default("[]")
   createdAt   DateTime @default(now())
 

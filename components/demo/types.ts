@@ -35,6 +35,15 @@ export interface Message {
   at: string;
 }
 
+export interface WorkoutLogEntry {
+  id: string;
+  /** ISO date string (yyyy-mm-dd). */
+  date: string;
+  exerciseName: string;
+  weight: number;
+  reps: number;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -47,6 +56,7 @@ export interface Client {
   nextCheckIn: string;
   weightUnit: "lb" | "kg";
   weightLog: WeightEntry[];
+  workoutLogs: WorkoutLogEntry[];
   messages: Message[];
 }
 

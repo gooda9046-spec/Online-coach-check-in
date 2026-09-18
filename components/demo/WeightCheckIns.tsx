@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Minus, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 import type { Client } from "./types";
+import { Sparkbars } from "./Sparkbars";
 
 function formatDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -24,11 +25,6 @@ export function WeightCheckIns({
   const latest = entries.at(-1);
   const first = entries[0];
   const delta = latest && first ? Math.round((latest.weight - first.weight) * 10) / 10 : 0;
-
-  const values = entries.map((e) => e.weight);
-  const min = Math.min(...values, latest?.weight ?? 0);
-  const max = Math.max(...values, latest?.weight ?? 0);
-  const range = Math.max(max - min, 1);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -104,33 +100,15 @@ export function WeightCheckIns({
             </div>
           </div>
 
-          <div className="flex h-16 gap-1.5">
-            {entries.map((entry) => {
-              const heightPct = ((entry.weight - min) / range) * 70 + 30;
-              const isLatest = entry.id === latest?.id;
-              return (
-                <div
-                  key={entry.id}
-                  className="flex h-full flex-1 flex-col items-center justify-end gap-1"
-                >
-                  <div
-                    className={`w-full rounded-t-sm ${
-                      isLatest ? "bg-accent-bright" : "bg-border"
-                    }`}
-                    style={{ height: `${heightPct}%` }}
-                    title={`${entry.weight} ${client.weightUnit} on ${formatDate(entry.date)}`}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-1.5 flex gap-1.5">
-            {entries.map((entry) => (
-              <span key={entry.id} className="flex-1 text-center text-[10px] text-muted">
-                {formatDate(entry.date)}
-              </span>
-            ))}
-          </div>
+          <Sparkbars
+            points={entries.map((entry) => ({
+              id: entry.id,
+              label: formatDate(entry.date),
+              value: entry.weight,
+              tooltip: `${entry.weight} ${client.weightUnit} on ${formatDate(entry.date)}`,
+            }))}
+            highlightId={latest?.id}
+          />
         </>
       )}
     </div>
