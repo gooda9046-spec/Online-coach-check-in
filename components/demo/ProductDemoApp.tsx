@@ -174,6 +174,37 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
     }
   }
 
+  async function addProgramEntry(programId: string, notes: string, photoUrl: string | null) {
+    try {
+      const updated = await api<Program>(`/api/demo/programs/${programId}/entries`, {
+        method: "POST",
+        body: JSON.stringify({ notes, photoUrl }),
+      });
+      setState((prev) => {
+        if (!prev) return prev;
+        if (prev.role === "coach") {
+          return { ...prev, programs: prev.programs.map((p) => (p.id === updated.id ? updated : p)) };
+        }
+        return prev.program?.id === updated.id ? { ...prev, program: updated } : prev;
+      });
+    } catch (err) {
+      console.error("Failed to add entry:", err);
+    }
+  }
+
+  // Progress photos are coach-only-visible and fetched separately by
+  // ProgressPhotos itself, so there's nothing to merge into `state` here.
+  async function sendProgressPhoto(clientId: string, url: string) {
+    try {
+      await api(`/api/demo/clients/${clientId}/photos`, {
+        method: "POST",
+        body: JSON.stringify({ url }),
+      });
+    } catch (err) {
+      console.error("Failed to send progress photo:", err);
+    }
+  }
+
   async function sendMessage(clientId: string, text: string) {
     const optimisticFrom = currentUser.role;
     const optimistic: Client["messages"][number] = {
@@ -229,6 +260,8 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
             onLogWeight={logWeight}
             onLogWorkout={logWorkout}
             onSendMessage={sendMessage}
+            onAddEntry={addProgramEntry}
+            onSendProgressPhoto={sendProgressPhoto}
           />
         </div>
       </div>
@@ -264,6 +297,7 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
         onAssignProgram={assignProgram}
         onLogWeight={logWeight}
         onSendMessage={(text) => sendMessage(client.id, text)}
+        onAddEntry={addProgramEntry}
       />
     ) : (
       <p className="text-sm text-muted">Client not found.</p>
@@ -275,7 +309,12 @@ export function ProductDemoApp({ currentUser }: { currentUser: CurrentUser }) {
   } else {
     const program = state.programs.find((p) => p.id === view.id);
     coachContent = program ? (
-      <ProgramDetailView program={program} onNavigate={setView} onUpdateProgram={updateProgram} />
+      <ProgramDetailView
+        program={program}
+        onNavigate={setView}
+        onUpdateProgram={updateProgram}
+        onAddEntry={addProgramEntry}
+      />
     ) : (
       <p className="text-sm text-muted">Program not found.</p>
     );

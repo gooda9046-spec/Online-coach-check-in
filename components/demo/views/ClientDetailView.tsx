@@ -7,6 +7,8 @@ import type { Client, DemoView, Program } from "../types";
 import { WeightCheckIns } from "../WeightCheckIns";
 import { ExerciseCharts } from "../ExerciseCharts";
 import { MessageThread } from "../MessageThread";
+import { GeneralProgramFeed } from "../GeneralProgramFeed";
+import { ProgressPhotos } from "../ProgressPhotos";
 
 function InviteBanner({ clientId, hasJoined }: { clientId: string; hasJoined: boolean }) {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export function ClientDetailView({
   onAssignProgram,
   onLogWeight,
   onSendMessage,
+  onAddEntry,
 }: {
   client: Client;
   programs: Program[];
@@ -67,6 +70,7 @@ export function ClientDetailView({
   onAssignProgram: (clientId: string, programId: string | null) => void;
   onLogWeight: (clientId: string, weight: number) => void;
   onSendMessage: (text: string) => void;
+  onAddEntry: (programId: string, notes: string, photoUrl: string | null) => Promise<void>;
 }) {
   const assignedProgram = programs.find((p) => p.id === client.programId) ?? null;
 
@@ -112,23 +116,30 @@ export function ClientDetailView({
             </div>
 
             {assignedProgram ? (
-              <div className="space-y-3">
-                {assignedProgram.days.map((day) => (
-                  <div key={day.id} className="rounded-lg border border-border bg-surface-2 p-3">
-                    <p className="mb-2 text-xs font-semibold text-accent-bright">{day.name}</p>
-                    <ul className="space-y-1">
-                      {day.exercises.map((ex) => (
-                        <li key={ex.id} className="flex justify-between text-xs text-muted">
-                          <span>{ex.name}</span>
-                          <span>
-                            {ex.sets}×{ex.reps} @ {ex.load}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+              assignedProgram.kind === "general" ? (
+                <GeneralProgramFeed
+                  program={assignedProgram}
+                  onAddEntry={(notes, photoUrl) => onAddEntry(assignedProgram.id, notes, photoUrl)}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {assignedProgram.days.map((day) => (
+                    <div key={day.id} className="rounded-lg border border-border bg-surface-2 p-3">
+                      <p className="mb-2 text-xs font-semibold text-accent-bright">{day.name}</p>
+                      <ul className="space-y-1">
+                        {day.exercises.map((ex) => (
+                          <li key={ex.id} className="flex justify-between text-xs text-muted">
+                            <span>{ex.name}</span>
+                            <span>
+                              {ex.sets}×{ex.reps} @ {ex.load}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )
             ) : (
               <p className="text-sm text-muted">
                 No program assigned yet — pick one from the dropdown above to see it appear here
@@ -142,6 +153,13 @@ export function ClientDetailView({
           <div>
             <p className="mb-3 text-sm font-semibold text-foreground">Exercise progression</p>
             <ExerciseCharts workoutLogs={client.workoutLogs} weightUnit={client.weightUnit} />
+          </div>
+
+          <div>
+            <p className="mb-3 text-sm font-semibold text-foreground">
+              Progress photos <span className="font-normal text-muted">— only you can see these</span>
+            </p>
+            <ProgressPhotos clientId={client.id} />
           </div>
         </div>
 

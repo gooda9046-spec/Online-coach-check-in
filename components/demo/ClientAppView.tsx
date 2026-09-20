@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { BarChart3, Check, MessageCircle, Sun, TrendingUp } from "lucide-react";
+import { useRef, useState, type FormEvent } from "react";
+import { BarChart3, Camera, Check, Loader2, MessageCircle, Sun, TrendingUp } from "lucide-react";
 
 import type { Client, Exercise, Program } from "./types";
 import { WeightCheckIns } from "./WeightCheckIns";
 import { ExerciseCharts } from "./ExerciseCharts";
 import { MessageThread } from "./MessageThread";
+import { GeneralProgramFeed } from "./GeneralProgramFeed";
+import { usePhotoUpload } from "./usePhotoUpload";
 
 type ClientTab = "today" | "progress" | "charts" | "messages";
 
@@ -94,6 +96,53 @@ function ExerciseRow({
   );
 }
 
+function SendPhotoButton({ onSend }: { onSend: (file: File) => Promise<boolean> }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleFile(file: File) {
+    setSending(true);
+    const ok = await onSend(file);
+    setSending(false);
+    if (ok) {
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={sending}
+        className="mt-2 flex w-full items-center gap-2 rounded-xl border border-border bg-surface-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 disabled:opacity-60"
+      >
+        {sending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : sent ? (
+          <Check className="h-4 w-4 text-emerald-400" />
+        ) : (
+          <Camera className="h-4 w-4" />
+        )}
+        {sent ? "Sent to your coach" : "Send a progress photo"}
+      </button>
+    </>
+  );
+}
+
 export function ClientAppView({
   client,
   program,
@@ -101,6 +150,8 @@ export function ClientAppView({
   onLogWeight,
   onLogWorkout,
   onSendMessage,
+  onAddEntry,
+  onSendProgressPhoto,
 }: {
   client: Client;
   program: Program | null;
@@ -108,7 +159,10 @@ export function ClientAppView({
   onLogWeight: (clientId: string, weight: number) => void;
   onLogWorkout: (clientId: string, exerciseName: string, weight: number, reps: number) => void;
   onSendMessage: (clientId: string, text: string) => void;
+  onAddEntry: (programId: string, notes: string, photoUrl: string | null) => Promise<void>;
+  onSendProgressPhoto: (clientId: string, url: string) => Promise<void>;
 }) {
+  const { upload, error: photoError } = usePhotoUpload();
   const [tab, setTab] = useState<ClientTab>("today");
   const firstName = client.name.split(" ")[0];
   const todayWorkout = program?.days[0] ?? null;
@@ -135,7 +189,12 @@ export function ClientAppView({
               {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
             </p>
 
-            {todayWorkout ? (
+            {program?.kind === "general" ? (
+              <GeneralProgramFeed
+                program={program}
+                onAddEntry={(notes, photoUrl) => onAddEntry(program.id, notes, photoUrl)}
+              />
+            ) : todayWorkout ? (
               <div className="rounded-xl border border-accent/40 bg-accent/10 p-4">
                 <p className="text-xs font-semibold text-accent-bright">{todayWorkout.name}</p>
                 <ul className="mt-2">
@@ -167,6 +226,15 @@ export function ClientAppView({
             >
               📈 Log today&apos;s weight
             </button>
+            <SendPhotoButton
+              onSend={async (file) => {
+                const url = await upload(file);
+                if (!url) return false;
+                await onSendProgressPhoto(client.id, url);
+                return true;
+              }}
+            />
+            {photoError && <p className="mt-1.5 text-xs text-red-400">{photoError}</p>}
             <button
               type="button"
               onClick={() => setTab("messages")}

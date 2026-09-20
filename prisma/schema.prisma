@@ -76,7 +76,12 @@ model Session {
 model Program {
   id        String   @id
   name      String
-  days      Json
+  // "structured" (days/exercises, the original format) or "general" (a
+  // freeform dated log of notes + optional photos — for anything that
+  // doesn't fit the exercise-table shape).
+  kind      String   @default("structured")
+  days      Json     @default("[]")
+  entries   Json     @default("[]")
   coachId   String
   createdAt DateTime @default(now())
 
@@ -102,12 +107,28 @@ model Client {
   messages    Json     @default("[]")
   createdAt   DateTime @default(now())
 
-  coach   User     @relation("CoachToClients", fields: [coachId], references: [id], onDelete: Cascade)
-  user    User?    @relation("UserToClient", fields: [userId], references: [id], onDelete: SetNull)
-  program Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  coach   User            @relation("CoachToClients", fields: [coachId], references: [id], onDelete: Cascade)
+  user    User?           @relation("UserToClient", fields: [userId], references: [id], onDelete: SetNull)
+  program Program?        @relation(fields: [programId], references: [id], onDelete: SetNull)
   invite  Invite?
+  photos  ProgressPhoto[]
 
   @@index([coachId])
+}
+
+// Coach-only visibility: the client can upload but never lists these back —
+// enforced in the API layer, not just hidden in the UI.
+model ProgressPhoto {
+  id        String   @id @default(cuid())
+  clientId  String
+  url       String
+  caption   String?
+  date      String
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
 }
 
 model Invite {

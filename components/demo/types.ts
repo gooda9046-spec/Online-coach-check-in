@@ -12,10 +12,25 @@ export interface ProgramDay {
   exercises: Exercise[];
 }
 
+export type ProgramKind = "structured" | "general";
+
+export interface GeneralEntry {
+  id: string;
+  /** ISO date string (yyyy-mm-dd). */
+  date: string;
+  notes: string;
+  photoUrl: string | null;
+  addedBy: "coach" | "client";
+  /** ISO datetime string. */
+  createdAt: string;
+}
+
 export interface Program {
   id: string;
   name: string;
+  kind: ProgramKind;
   days: ProgramDay[];
+  entries: GeneralEntry[];
 }
 
 export type ClientStatus = "On track" | "Needs check-in" | "New";
@@ -42,6 +57,16 @@ export interface WorkoutLogEntry {
   exerciseName: string;
   weight: number;
   reps: number;
+}
+
+export interface ProgressPhoto {
+  id: string;
+  url: string;
+  caption: string | null;
+  /** ISO date string (yyyy-mm-dd). */
+  date: string;
+  /** ISO datetime string. */
+  createdAt: string;
 }
 
 export interface Client {
@@ -73,6 +98,8 @@ export function seedPrograms(): Program[] {
     {
       id: "p1",
       name: "Strength Block 4",
+      kind: "structured",
+      entries: [],
       days: [
         {
           id: "d1",
@@ -96,6 +123,8 @@ export function seedPrograms(): Program[] {
     {
       id: "p2",
       name: "Marathon Prep",
+      kind: "structured",
+      entries: [],
       days: [
         {
           id: "d3",

@@ -12,12 +12,23 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  if (!body || typeof body.id !== "string" || typeof body.name !== "string" || !Array.isArray(body.days)) {
-    return NextResponse.json({ error: "Expected { id, name, days }" }, { status: 400 });
+  const kind = body?.kind === "general" ? "general" : "structured";
+  if (!body || typeof body.id !== "string" || typeof body.name !== "string") {
+    return NextResponse.json({ error: "Expected { id, name, kind? }" }, { status: 400 });
+  }
+  if (kind === "structured" && !Array.isArray(body.days)) {
+    return NextResponse.json({ error: "Expected { days } for a structured program." }, { status: 400 });
   }
 
   const row = await prisma.program.create({
-    data: { id: body.id, name: body.name, days: body.days as Prisma.InputJsonValue, coachId: user.id },
+    data: {
+      id: body.id,
+      name: body.name,
+      kind,
+      days: (kind === "structured" ? body.days : []) as Prisma.InputJsonValue,
+      entries: [] as unknown as Prisma.InputJsonValue,
+      coachId: user.id,
+    },
   });
 
   return NextResponse.json(serializeProgram(row), { status: 201 });

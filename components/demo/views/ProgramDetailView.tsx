@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, X } from "lucide-react";
 
 import type { DemoView, Program, ProgramDay } from "../types";
 import { makeId } from "../types";
+import { GeneralProgramFeed } from "../GeneralProgramFeed";
 
 function AddExerciseForm({ onAdd }: { onAdd: (name: string, sets: number, reps: string, load: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -82,10 +83,12 @@ export function ProgramDetailView({
   program,
   onNavigate,
   onUpdateProgram,
+  onAddEntry,
 }: {
   program: Program;
   onNavigate: (view: DemoView) => void;
   onUpdateProgram: (program: Program) => void;
+  onAddEntry: (programId: string, notes: string, photoUrl: string | null) => Promise<void>;
 }) {
   const [addingDay, setAddingDay] = useState(false);
   const [dayName, setDayName] = useState("");
@@ -124,6 +127,13 @@ export function ProgramDetailView({
       </button>
 
       <h1 className="mb-6 text-xl font-semibold text-foreground">{program.name}</h1>
+
+      {program.kind === "general" ? (
+        <GeneralProgramFeed
+          program={program}
+          onAddEntry={(notes, photoUrl) => onAddEntry(program.id, notes, photoUrl)}
+        />
+      ) : (
 
       <div className="space-y-4">
         {program.days.map((day) => (
@@ -219,6 +229,7 @@ export function ProgramDetailView({
           </button>
         )}
       </div>
+      )}
     </div>
   );
 }
